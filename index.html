@@ -739,18 +739,17 @@
 
   // 📡 SEND TIL VEGG HER
  const payload = {
-  type: "projections",
+  type: "snapshot",
+  id: Date.now(),
   images: {
     mercator: canvases.mercator.toDataURL("image/jpeg", 0.85),
     peters: canvases.peters.toDataURL("image/jpeg", 0.85),
     robinson: canvases.robinson.toDataURL("image/jpeg", 0.85),
     goode: canvases.goode.toDataURL("image/jpeg", 0.85),
-  },
-  timestamp: Date.now()
+  }
 };
 
 channel.postMessage(payload);
-});
 
       // =============================================
       // PRINT — A5 liggende, 4 bilder i 2×2 grid
