@@ -172,6 +172,26 @@
       // CONFIG
       // =============================================
       const channel = new BroadcastChannel("photobooth-wall");
+      function handleIncoming(payload) {
+  if (!payload || !payload.images) return;
+
+  const keys = ["mercator", "peters", "robinson", "goode"];
+
+  const tmpCanvas = document.createElement("canvas");
+  const tmpCtx = tmpCanvas.getContext("2d");
+
+  const img = new Image();
+  img.onload = () => {
+    // tegn source igjen fra første bilde (vi bruker mercator som base)
+    liveCtx.clearRect(0, 0, BASE, BASE);
+    liveCtx.drawImage(img, 0, 0, BASE, BASE);
+
+    renderAll(liveCanvas);
+    statusEl.textContent = "Restored from saved session";
+  };
+
+  img.src = payload.images.mercator;
+}
 
       const BASE = 900; // longest side of any projection canvas
 
@@ -750,6 +770,9 @@
 };
 
 channel.postMessage(payload);
+      channel.onmessage = (e) => {
+  handleIncoming(e.data);
+};
 localStorage.setItem("lastProjections", JSON.stringify(payload));
 
       // =============================================
@@ -813,6 +836,18 @@ localStorage.setItem("lastProjections", JSON.stringify(payload));
       }
 
       document.getElementById('print-btn').addEventListener('click', printImages);
+      window.addEventListener("load", () => {
+  const saved = localStorage.getItem("lastProjections");
+
+  if (saved) {
+    try {
+      const payload = JSON.parse(saved);
+      handleIncoming(payload);
+    } catch (e) {
+      console.error("Invalid saved data", e);
+    }
+  }
+});
     </script>
   </body>
 </html>
