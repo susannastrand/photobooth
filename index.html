@@ -750,6 +750,7 @@
 };
 
 channel.postMessage(payload);
+localStorage.setItem("lastProjections", JSON.stringify(payload));
 
       // =============================================
       // PRINT — A5 liggende, 4 bilder i 2×2 grid
