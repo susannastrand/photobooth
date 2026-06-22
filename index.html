@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map Projection Photobooth</title>
+  <style>
+    /* =============================================
+       FONTS & RESET
+       ============================================= */
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0e0e0e;
+      --surface:   #1a1a1a;
+      --border:    #2e2e2e;
+      --text:      #e8e8e0;
+      --muted:     #666;
+      --accent:    #c8f060;
+      --radius:    6px;
+      --font-sans: 'Space Grotesk', system-ui, sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* =============================================
+       MAIN LAYOUT
+       ============================================= */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    /* =============================================
+       CAMERA PANEL (centered)
+       ============================================= */
+    .cam-panel {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    #live-wrap {
+      position: relative;
+      background: #000;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      aspect-ratio: 1 / 1;
+    }
+
+    #live {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #status {
+      position: absolute;
+      bottom: 8px;
+      left: 0; right: 0;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: rgba(200,240,96,0.7);
+      pointer-events: none;
+    }
+
+    /* =============================================
+       BUTTON ROW
+       ============================================= */
+    .btn-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
+
+    #snap-btn {
+      flex: 1;
+      padding: 12px;
+      background: var(--accent);
+      color: #0e0e0e;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: opacity 0.15s;
+    }
+
+    #snap-btn:hover { opacity: 0.85; }
+    #snap-btn:disabled { opacity: 0.3; cursor: default; }
+
+    /* =============================================
+       GRID 2×2 OF 4 PROJECTIONS
+       ============================================= */
+    .proj-grid {
+      width: 100%;
+      max-width: 700px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .proj-cell {
+      position: relative;
+      background: radial-gradient(circle at 50% 50%, #161616, #0e0e0e);
+      border-radius: var(--radius);
+      padding: 4px;
+    }
+
+    .proj-cell canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: var(--radius);
+      background: transparent;
+      max-height: 70vh;
+    }
+
+    @media (max-width: 380px) {
+      .proj-grid { grid-template-columns: 1fr; }
+    }
+
+    /* =============================================
+       PRINT-KNAPP
+       ============================================= */
+    #print-btn {
+      flex: 1;
+      padding: 12px;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    #print-btn:hover {
+      background: var(--accent);
+      color: #0e0e0e;
+    }
+
+    #print-btn:disabled { opacity: 0.3; cursor: default; }
+
+    /* =============================================
+       PRINT-LAYOUT  (A5 liggende = 210×148 mm)
+       4 bilder i A7 (74×52.5 mm hver), 2×2
+       ============================================= */
+    @media print {
+      @page {
+        size: A5 landscape;
+        margin: 0;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 210mm;
+        height: 148mm;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      body * { visibility: hidden; }
+      #print-sheet, #print-sheet * { visibility: visible; }
+
+      #print-sheet {
+        position: fixed;
+        top: 0; left: 0;
+        width: 210mm;
+        height: 148mm;
+        background: white;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 3mm;
+        padding: 5mm;
+        box-sizing: border-box;
+        visibility: visible;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .print-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2mm;
+        border: 0.3mm solid #999;
+        overflow: hidden;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .print-cell img {
+        width: 100%;
+        flex: 1 1 auto;
+        min-height: 0;
+        object-fit: contain;
+        filter: grayscale(100%);
+        display: block;
+      }
+
+      .print-cell .print-label {
+        flex: 0 0 auto;
+        font-family: 'Space Mono', monospace;
+        font-size: 6pt;
+        color: #333;
+        text-align: center;
+        padding-top: 1mm;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+    }
+
+    /* Print-sheet hidden in browser */
+    #print-sheet {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- CAMERA (centered) -->
+  <div class="cam-panel">
+    <div id="live-wrap">
+      <canvas id="live" width="400" height="400"></canvas>
+      <div id="status">Waiting for camera access…</div>
+    </div>
+    <div class="btn-row">
+      <button id="snap-btn">Take Photo</button>
+      <button id="print-btn" disabled>Print A5 (4 photos)</button>
+    </div>
+  </div>
+
+  <!-- 4 PROJECTIONS -->
+  <div class="proj-grid">
+    <div class="proj-cell">
+      <canvas id="c-mercator" width="400" height="400"></canvas>
+    </div>
+    <div class="proj-cell">
+      <canvas id="c-peters" width="400" height="400"></canvas>
+    </div>
+    <div class="proj-cell">
+      <canvas id="c-robinson" width="400" height="400"></canvas>
+    </div>
+    <div class="proj-cell">
+      <canvas id="c-goode" width="400" height="400"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- PRINT-SHEET: built from canvas data URLs -->
+<div id="print-sheet">
+  <div class="print-cell"><img id="pi-mercator" /><div class="print-label">Mercator</div></div>
+  <div class="print-cell"><img id="pi-peters"   /><div class="print-label">Gall-Peters</div></div>
+  <div class="print-cell"><img id="pi-robinson" /><div class="print-label">Robinson</div></div>
+  <div class="print-cell"><img id="pi-goode"    /><div class="print-label">Goode's Homolosine</div></div>
+</div>
+
+<script>
+// =============================================
+// KONFIGURASJON
+// =============================================
+// Hver canvas får sin egen bredde/høyde basert på projeksjonens
+// faktiske omriss (ikke lenger tvunget kvadratisk).
+const BASE = 400; // referanse-størrelse for det lengste målet
+
+// Graticule: linjer hver 20 grader
+const LAT_LINES = [];
+const LON_LINES = [];
+for (let l = -80; l <= 80; l += 20) LAT_LINES.push(l);
+for (let l = -160; l <= 160; l += 20) LON_LINES.push(l);
+
+const STEPS = 200; // punkter per linje
+const MERCATOR_CLAMP = 80; // Mercator klippes ved ±80° (unngår uendelig ved polene)
+
+// =============================================
+// FOROVER-PROJEKSJON: lat/lon (grader) → plan xy
+// Dette er den ENESTE kilden til sannhet. Både omriss,
+// graticule og bbox utledes herfra.
+// =============================================
+function forward(lat, lon, projKey) {
+  const lat_n = lat / 90;
+  const lon_n = lon / 180;
+  let sx = lon_n, sy = lat_n;
+
+  if (projKey === 'mercator') {
+    const lat_r = lat * Math.PI / 180;
+    sy = Math.log(Math.tan(Math.PI / 4 + lat_r / 2)) / Math.PI;
+    sx = lon_n;
+
+  } else if (projKey === 'peters') {
+    sy = Math.sin(lat_n * Math.PI / 2);
+    sx = lon_n;
+
+  } else if (projKey === 'robinson') {
+    const absY   = Math.abs(lat_n);
+    const factor = 1 - absY * absY * 0.16;
+    sx = lon_n * factor;
+    sy = lat_n * 0.95;
+
+  } else if (projKey === 'goode') {
+    const cut = 0.5;
+    if (Math.abs(lon_n) < cut) {
+      sx = lon_n;
+      sy = lat_n;
+    } else {
+      const sign = lon_n > 0 ? 1 : -1;
+      const t    = (Math.abs(lon_n) - cut) / (1 - cut);
+      sx = sign * (cut + t * (1 - cut));
+      sy = lat_n + sign * Math.sin(t * Math.PI) * 0.25;
+    }
+  }
+
+  return [sx, sy];
+}
+
+// =============================================
+// BOUNDING BOX – beregnes én gang per projeksjon
+// ved å projisere hele kartets ytterkant
+// =============================================
+function computeBBox(projKey) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  const N = 360;
+  const latTop = projKey === 'mercator' ?  MERCATOR_CLAMP : 90;
+  const latBot = projKey === 'mercator' ? -MERCATOR_CLAMP : -90;
+
+  for (let i = 0; i <= N; i++) {
+    const lon = -180 + 360 * i / N;
+    for (const lat of [latTop, latBot]) {
+      const [x, y] = forward(lat, lon, projKey);
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  // Goode's og Robinson har sin ytterste y allerede ved lat ±90 (sjekket over),
+  // men sjekk også x-ekstremene langs lengdegrad ±180 for alle breddegrader
+  // (relevant for projeksjoner der bredden varierer med breddegrad)
+  for (let i = 0; i <= N; i++) {
+    const lat = latBot + (latTop - latBot) * i / N;
+    for (const lon of [-180, 180]) {
+      const [x, y] = forward(lat, lon, projKey);
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+
+  return { minX, maxX, minY, maxY, w: maxX - minX, h: maxY - minY };
+}
+
+const BBOX = {
+  mercator: computeBBox('mercator'),
+  peters:   computeBBox('peters'),
+  robinson: computeBBox('robinson'),
+  goode:    computeBBox('goode'),
+};
+
+// Canvas-dimensjoner per projeksjon: lengste side = BASE
+const DIMS = {};
+for (const [key, box] of Object.entries(BBOX)) {
+  const aspect = box.w / box.h;
+  if (aspect >= 1) {
+    DIMS[key] = { w: Math.round(BASE), h: Math.round(BASE / aspect) };
+  } else {
+    DIMS[key] = { w: Math.round(BASE * aspect), h: Math.round(BASE) };
+  }
+}
+
+// Konverter plan-koordinat (fra forward) til piksel på CANVAS for projKey
+function toPixel(x, y, projKey) {
+  const box = BBOX[projKey];
+  const dim = DIMS[projKey];
+  const px = (x - box.minX) / box.w * dim.w;
+  // maxY (nord) skal være VISUELL TOPP (py=0), minY (sør) skal være bunn
+  const py = (box.maxY - y) / box.h * dim.h;
+  return [px, py];
+}
+
+// Bekvemmelighetsfunksjon: lat/lon (grader) direkte til piksel
+function projectPoint(lat, lon, projKey) {
+  const [x, y] = forward(lat, lon, projKey);
+  return toPixel(x, y, projKey);
+}
+
+// =============================================
+// GRATICULE
+// =============================================
+function drawGraticule(ctx, projKey) {
+  const dim = DIMS[projKey];
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth   = 0.7;
+
+  for (const lat of LAT_LINES) {
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= STEPS; i++) {
+      const lon = -180 + 360 * i / STEPS;
+      const pt  = projectPoint(lat, lon, projKey);
+      if (pt[0] < -5 || pt[0] > dim.w + 5 || pt[1] < -5 || pt[1] > dim.h + 5) {
+        started = false; continue;
+      }
+      if (!started) { ctx.moveTo(pt[0], pt[1]); started = true; }
+      else ctx.lineTo(pt[0], pt[1]);
+    }
+    ctx.stroke();
+  }
+
+  for (const lon of LON_LINES) {
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= STEPS; i++) {
+      const latTop = projKey === 'mercator' ?  MERCATOR_CLAMP : 90;
+      const latBot = projKey === 'mercator' ? -MERCATOR_CLAMP : -90;
+      const lat = latBot + (latTop - latBot) * i / STEPS;
+      const pt  = projectPoint(lat, lon, projKey);
+      if (pt[0] < -5 || pt[0] > dim.w + 5 || pt[1] < -5 || pt[1] > dim.h + 5) {
+        started = false; continue;
+      }
+      if (!started) { ctx.moveTo(pt[0], pt[1]); started = true; }
+      else ctx.lineTo(pt[0], pt[1]);
+    }
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// =============================================
+// PROJEKSJONENS YTTERKANT (omriss) som Path2D
+// Bruker samme forward()+toPixel() som alt annet,
+// så omrisset alltid stemmer nøyaktig med bildet og griddet.
+// =============================================
+function getOutlinePath(projKey) {
+  const path = new Path2D();
+  const N = 240;
+  const latTop = projKey === 'mercator' ?  MERCATOR_CLAMP : 90;
+  const latBot = projKey === 'mercator' ? -MERCATOR_CLAMP : -90;
+
+  // Øvre kant: lon fra -180 til 180 ved latTop
+  const top = [];
+  for (let i = 0; i <= N; i++) {
+    const lon = -180 + 360 * i / N;
+    top.push(projectPoint(latTop, lon, projKey));
+  }
+
+  // Høyre kant: lat fra latTop til latBot ved lon=180
+  const right = [];
+  for (let i = 0; i <= N; i++) {
+    const lat = latTop + (latBot - latTop) * i / N;
+    right.push(projectPoint(lat, 180, projKey));
+  }
+
+  // Nedre kant: lon fra 180 til -180 ved latBot
+  const bottom = [];
+  for (let i = 0; i <= N; i++) {
+    const lon = 180 - 360 * i / N;
+    bottom.push(projectPoint(latBot, lon, projKey));
+  }
+
+  // Venstre kant: lat fra latBot til latTop ved lon=-180
+  const left = [];
+  for (let i = 0; i <= N; i++) {
+    const lat = latBot + (latTop - latBot) * i / N;
+    left.push(projectPoint(lat, -180, projKey));
+  }
+
+  path.moveTo(top[0][0], top[0][1]);
+  for (const pt of top) path.lineTo(pt[0], pt[1]);
+  for (const pt of right) path.lineTo(pt[0], pt[1]);
+  for (const pt of bottom) path.lineTo(pt[0], pt[1]);
+  for (const pt of left) path.lineTo(pt[0], pt[1]);
+  path.closePath();
+
+  return path;
+}
+
+// =============================================
+// PIXEL-FOR-PIXEL PROJEKSJON (svart/hvitt)
+// For hver destinasjons-piksel (i projeksjonens eget koordinatsystem):
+//   1) finn plan-xy via bbox
+//   2) finn lat/lon numerisk (invers av forward) via bisection/sampling
+//   3) finn tilsvarende piksel i kildebildet (kvadratisk kamera-bilde)
+//      ved å bruke lon→[-1,1] og lat→[-1,1] direkte (equirectangular kilde)
+// =============================================
+
+// Numerisk/analytisk invers: gitt plan (x,y) i en projeksjon, finn (lat,lon).
+// Mercator og Peters har lukket-form løsning (rask og eksakt).
+// Robinson og Goode's bruker Newton-iterasjon (begge er glatte funksjoner
+// av lat alene i y-retning per lengdegrad-bånd, så det konvergerer raskt).
+function inverseLatLon(x, y, projKey) {
+  if (projKey === 'mercator') {
+    const lon = x * 180;
+    const lat_r = 2 * Math.atan(Math.exp(y * Math.PI)) - Math.PI / 2;
+    return [lat_r * 180 / Math.PI, lon];
+  }
+  if (projKey === 'peters') {
+    const lon = x * 180;
+    const lat_n = Math.asin(Math.max(-1, Math.min(1, y))) / (Math.PI / 2);
+    return [lat_n * 90, lon];
+  }
+
+  // Robinson / Goode's
+  let lat = y * 90;
+  let lon = x * 180;
+  for (let iter = 0; iter < 12; iter++) {
+    const [fx, fy] = forward(lat, lon, projKey);
+    const dx = x - fx;
+    const dy = y - fy;
+    if (Math.abs(dx) < 1e-5 && Math.abs(dy) < 1e-5) break;
+    lat += dy * 90 * 0.95;
+    lon += dx * 180 * 0.95;
+    lat = Math.max(-90, Math.min(90, lat));
+    lon = Math.max(-180, Math.min(180, lon));
+  }
+  return [lat, lon];
+}
+
+function applyProjectionBW(srcCtx, dstCtx, projKey) {
+  const dim = DIMS[projKey];
+  const box = BBOX[projKey];
+  const srcW = srcCtx.canvas.width;
+  const srcH = srcCtx.canvas.height;
+
+  const src = srcCtx.getImageData(0, 0, srcW, srcH);
+  const dst = dstCtx.createImageData(dim.w, dim.h);
+  const sd = src.data, dd = dst.data;
+
+  for (let py = 0; py < dim.h; py++) {
+    for (let px = 0; px < dim.w; px++) {
+      // Piksel → plan-koordinat i denne projeksjonen.
+      // py=0 er VISUELL TOPP av canvas og skal tilsvare maxY (nord),
+      // py=dim.h er bunn og skal tilsvare minY (sør) — derfor snudd fortegn her.
+      const x = box.minX + (px / dim.w) * box.w;
+      const y = box.maxY - (py / dim.h) * box.h;
+
+      // Plan-koordinat → lat/lon
+      const [lat, lon] = inverseLatLon(x, y, projKey);
+
+      // lat/lon → kilde-piksel (kvadratisk kamerabilde, equirectangular).
+      // Kildebildet (canvas) har Y som vokser nedover som normalt for skjermbilder,
+      // og lat=90 (nord) skal tilsvare toppen av kildebildet (srcY=0).
+      const srcNX = lon / 180;        // [-1,1]
+      const srcNY = -lat / 90;        // [-1,1]: lat=90 -> srcNY=-1 -> topp av kildebildet
+      const srcX = Math.round((srcNX + 1) / 2 * srcW);
+      const srcY = Math.round((srcNY + 1) / 2 * srcH);
+
+      const di = (py * dim.w + px) * 4;
+      if (srcX >= 0 && srcX < srcW && srcY >= 0 && srcY < srcH) {
+        const si = (srcY * srcW + srcX) * 4;
+        const lum = sd[si] * 0.299 + sd[si+1] * 0.587 + sd[si+2] * 0.114;
+        dd[di]     = lum;
+        dd[di + 1] = lum;
+        dd[di + 2] = lum;
+        dd[di + 3] = sd[si + 3];
+      } else {
+        dd[di + 3] = 0;
+      }
+    }
+  }
+  dstCtx.putImageData(dst, 0, 0);
+}
+
+// =============================================
+// RENDER ALLE 4 PROJEKSJONER
+// =============================================
+const canvases = {
+  mercator: document.getElementById('c-mercator'),
+  peters:   document.getElementById('c-peters'),
+  robinson: document.getElementById('c-robinson'),
+  goode:    document.getElementById('c-goode'),
+};
+
+// Sett canvas-dimensjoner ved oppstart, basert på beregnet bbox
+for (const [key, canvas] of Object.entries(canvases)) {
+  canvas.width  = DIMS[key].w;
+  canvas.height = DIMS[key].h;
+}
+
+function renderAll(sourceCanvas) {
+  // Kilde-bildet er alltid kvadratisk (kamera), lagres speilvendt
+  const SRC = sourceCanvas.width;
+  const tmp  = document.createElement('canvas');
+  tmp.width  = SRC; tmp.height = SRC;
+  const tCtx = tmp.getContext('2d');
+
+  tCtx.save();
+  tCtx.scale(-1, 1);
+  tCtx.drawImage(sourceCanvas, -SRC, 0, SRC, SRC);
+  tCtx.restore();
+
+  for (const [key, canvas] of Object.entries(canvases)) {
+    const dim = DIMS[key];
+    canvas.width  = dim.w;
+    canvas.height = dim.h;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, dim.w, dim.h);
+
+    const outline = getOutlinePath(key);
+
+    ctx.save();
+    ctx.clip(outline);
+    applyProjectionBW(tCtx, ctx, key);
+    drawGraticule(ctx, key);
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(232,232,224,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke(outline);
+    ctx.restore();
+  }
+
+  // Oppdater print-sheet
+  for (const [key, canvas] of Object.entries(canvases)) {
+    const imgEl = document.getElementById('pi-' + key);
+    if (imgEl) imgEl.src = canvas.toDataURL('image/png');
+  }
+
+  document.getElementById('print-btn').disabled = false;
+}
+
+// =============================================
+// KAMERA
+// =============================================
+const liveCanvas = document.getElementById('live');
+const liveCtx    = liveCanvas.getContext('2d');
+const statusEl   = document.getElementById('status');
+const video      = document.createElement('video');
+
+// VIKTIG: disse må settes FØR srcObject tildeles (krav i bl.a. Safari)
+video.autoplay    = true;
+video.playsInline = true;
+video.muted       = true;
+video.setAttribute('playsinline', ''); // ekstra sikkerhet for eldre iOS
+
+let rafId = null;
+let cameraReady = false;
+
+function startDrawLoop() {
+  if (rafId) cancelAnimationFrame(rafId); // unngå duplikate løkker
+  function drawLive() {
+    if (video.readyState >= 2) { // HAVE_CURRENT_DATA eller bedre
+      liveCtx.save();
+      liveCtx.scale(-1, 1);
+      liveCtx.drawImage(video, -BASE, 0, BASE, BASE);
+      liveCtx.restore();
+      if (!cameraReady) {
+        cameraReady = true;
+        statusEl.textContent = 'Ready — frame yourself';
+      }
+    }
+    rafId = requestAnimationFrame(drawLive);
+  }
+  drawLive();
+}
+
+function fallbackToUpload(message) {
+  statusEl.textContent = message;
+  const btn = document.getElementById('snap-btn');
+  btn.textContent = 'Upload Photo';
+  btn.replaceWith(btn.cloneNode(true)); // fjern gamle listeners
+  const newBtn = document.getElementById('snap-btn');
+  newBtn.addEventListener('click', () => {
+    const inp  = document.createElement('input');
+    inp.type   = 'file';
+    inp.accept = 'image/*';
+    inp.onchange = e => {
+      if (!e.target.files[0]) return;
+      const img  = new Image();
+      img.onload = () => {
+        liveCtx.clearRect(0, 0, BASE, BASE);
+        liveCtx.drawImage(img, 0, 0, BASE, BASE);
+        renderAll(liveCanvas);
+        statusEl.textContent = 'Photo loaded';
+      };
+      img.src = URL.createObjectURL(e.target.files[0]);
+    };
+    inp.click();
+  });
+}
+
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  fallbackToUpload('Camera not supported in this browser — upload a photo instead');
+} else {
+  statusEl.textContent = 'Requesting camera access…';
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'user', width: { ideal: BASE }, height: { ideal: BASE } },
+    audio: false
+  }).then(stream => {
+    video.srcObject = stream;
+
+    // Eksplisitt play() – avgjørende i Safari/iOS, kan ellers henge på første frame
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        console.warn('video.play() feilet:', err);
+        statusEl.textContent = 'Tap anywhere to start the camera';
+        document.body.addEventListener('click', () => video.play(), { once: true });
+      });
+    }
+
+    // Start tegne-løkken så snart vi har metadata (dimensjoner)
+    video.addEventListener('loadedmetadata', startDrawLoop, { once: true });
+
+    // Sikkerhetsnett: hvis loadedmetadata aldri fyrer (skjer i noen nettlesere)
+    setTimeout(() => {
+      if (!cameraReady) startDrawLoop();
+    }, 1500);
+
+    // Hvis kamera-strømmen stopper (f.eks. enheten kobles fra)
+    stream.getVideoTracks()[0].addEventListener('ended', () => {
+      fallbackToUpload('Camera disconnected — upload a photo instead');
+    });
+
+  }).catch(err => {
+    console.error('getUserMedia feilet:', err);
+    let msg = 'No camera access — upload a photo instead';
+    if (err.name === 'NotAllowedError') msg = 'Camera access denied — check your browser settings';
+    if (err.name === 'NotFoundError')   msg = 'No camera found — upload a photo instead';
+    if (err.name === 'NotReadableError') msg = 'Camera is in use by another application';
+    fallbackToUpload(msg);
+  });
+}
+
+// =============================================
+// TA BILDE
+// =============================================
+document.getElementById('snap-btn').addEventListener('click', () => {
+  if (!video.srcObject) return;
+  renderAll(liveCanvas);
+  statusEl.textContent = '✓ Photo taken';
+});
+
+// =============================================
+// PRINT
+// =============================================
+document.getElementById('print-btn').addEventListener('click', () => {
+  document.getElementById('print-sheet').style.display = 'grid';
+  window.print();
+  setTimeout(() => {
+    document.getElementById('print-sheet').style.display = 'none';
+  }, 1000);
+});
+</script>
+</body>
+</html>
