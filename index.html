@@ -738,20 +738,21 @@
   statusEl.textContent = '✓ Photo taken';
 
   // 📡 SEND TIL VEGG HER
-const payload = {
-  type: "projections",
-  images: {
-    mercator: canvases.mercator.toDataURL("image/jpeg", 0.85),
-    peters: canvases.peters.toDataURL("image/jpeg", 0.85),
-    robinson: canvases.robinson.toDataURL("image/jpeg", 0.85),
-    goode: canvases.goode.toDataURL("image/jpeg", 0.85),
-  },
-  timestamp: Date.now()
-};
 
-localStorage.setItem("lastProjections", JSON.stringify(payload));
+  const payload = {
+    type: "projections",
+    images: {
+      mercator: canvases.mercator.toDataURL("image/jpeg", 0.85),
+      peters: canvases.peters.toDataURL("image/jpeg", 0.85),
+      robinson: canvases.robinson.toDataURL("image/jpeg", 0.85),
+      goode: canvases.goode.toDataURL("image/jpeg", 0.85),
+    },
+    timestamp: Date.now()
+  };
 
-channel.postMessage(payload);
+  localStorage.setItem("lastProjections", JSON.stringify(payload));
+  channel.postMessage(payload);
+
 });
 
       // =============================================
