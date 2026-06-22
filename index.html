@@ -173,12 +173,6 @@
       // =============================================
       const channel = new BroadcastChannel("photobooth-wall");
 
-function sendToWall(imageDataUrl) {
-  channel.postMessage({
-    type: "photo",
-    image: imageDataUrl
-  });
-}
       const BASE = 900; // longest side of any projection canvas
 
       // All 4 projections render into canvases of exactly the same pixel dimensions
@@ -744,8 +738,18 @@ function sendToWall(imageDataUrl) {
   statusEl.textContent = '✓ Photo taken';
 
   // 📡 SEND TIL VEGG HER
-  const img = liveCanvas.toDataURL("image/jpeg", 0.85);
-  sendToWall(img);
+ const payload = {
+  type: "projections",
+  images: {
+    mercator: canvases.mercator.toDataURL("image/jpeg", 0.85),
+    peters: canvases.peters.toDataURL("image/jpeg", 0.85),
+    robinson: canvases.robinson.toDataURL("image/jpeg", 0.85),
+    goode: canvases.goode.toDataURL("image/jpeg", 0.85),
+  },
+  timestamp: Date.now()
+};
+
+channel.postMessage(payload);
 });
 
       // =============================================
