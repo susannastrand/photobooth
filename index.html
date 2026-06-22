@@ -738,7 +738,7 @@
   statusEl.textContent = '✓ Photo taken';
 
   // 📡 SEND TIL VEGG HER
- const payload = {
+const payload = {
   type: "projections",
   images: {
     mercator: canvases.mercator.toDataURL("image/jpeg", 0.85),
@@ -748,6 +748,8 @@
   },
   timestamp: Date.now()
 };
+
+localStorage.setItem("lastProjections", JSON.stringify(payload));
 
 channel.postMessage(payload);
 });
