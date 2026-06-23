@@ -98,19 +98,28 @@
         }
 
       .proj-cell {
-        background: radial-gradient(circle at 50% 50%, #161616, #0e0e0e);
-        border-radius: var(--radius);
-        padding: 4px;
-        }
-
-      /* width:100% + height:auto lets canvas keep its own aspect ratio and fill the column */
-      .proj-cell canvas {
-        width: 100%;
-        height: auto;
-        display: block;
-        border-radius: var(--radius);
-        background: transparent;
-        }
+  background: radial-gradient(circle at 50% 50%, #161616, #0e0e0e);
+  border-radius: var(--radius);
+  padding: 4px 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.proj-cell canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+  background: transparent;
+}
+.proj-cell .proj-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 
       @media (max-width: 380px) {
         .proj-grid { grid-template-columns: 1fr; }
@@ -164,6 +173,13 @@
         <div class="proj-cell"><canvas id="c-robinson"></canvas></div>
         <div class="proj-cell"><canvas id="c-goode"></canvas></div>
       </div>
+      
+      <div class="proj-grid">
+  <div class="proj-cell"><canvas id="c-mercator"></canvas><div class="proj-label">Mercator</div></div>
+  <div class="proj-cell"><canvas id="c-peters"></canvas><div class="proj-label">Gall–Peters</div></div>
+  <div class="proj-cell"><canvas id="c-robinson"></canvas><div class="proj-label">Robinson</div></div>
+  <div class="proj-cell"><canvas id="c-goode"></canvas><div class="proj-label">Goode's</div></div>
+</div>
     </div>
     <div id="print-sheet"></div>
 
