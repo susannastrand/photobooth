@@ -93,14 +93,25 @@
       }
 
       .proj-cell {
-        background: radial-gradient(circle at 50% 50%, #161616, #0e0e0e);
-        border-radius: var(--radius);
-        padding: 4px 4px 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-      }
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.canvas-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-wrap canvas {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
 
       .proj-cell canvas {
         width: 100%;
@@ -170,6 +181,12 @@
           <canvas id="c-goode"></canvas>
           <div class="proj-label">Goode's Homolosine</div>
         </div>
+        <div class="proj-cell">
+  <div class="canvas-wrap">
+    <canvas id="c-mercator"></canvas>
+  </div>
+  <div class="proj-label">Mercator</div>
+</div>
       </div>
     </div>
 
