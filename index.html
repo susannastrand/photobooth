@@ -675,8 +675,8 @@
       });
 
       function printImages() {
-        const keys   = ['mercator','peters','robinson','goode'];
-        const labels = ['Mercator','Gall–Peters','Robinson',"Goode's Homolosine"];
+        const keys   = ['mercator','goode','robinson','peters'];
+        const labels = ['Mercator',"Goode's Homolosine",'Robinson','Gall–Peters'];
         const imgs   = keys.map(k => canvases[k].toDataURL('image/png'));
 
         const win = window.open('','_blank');
