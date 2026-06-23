@@ -752,7 +752,6 @@ try {
   });
   wallChannel.close();
 } catch(e) { /* BroadcastChannel not supported */ }
-};
 
 channel.postMessage(payload);
 localStorage.setItem("lastProjections", JSON.stringify(payload));
