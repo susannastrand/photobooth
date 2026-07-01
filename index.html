@@ -690,13 +690,28 @@
         const N_IMAGES  = keys.length;
         const CELL_H    = BAND_H / N_IMAGES;   // 57.5 mm per bilde
 
+        const BLACK_BAND_H = 240; // mm, svart bakgrunn fra 0 til 240 mm
+
         const win = window.open('','_blank');
         win.document.write(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><style>
   @page { size: ${PAGE_W}mm ${PAGE_H}mm; margin: 0; }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: ${PAGE_W}mm; height: ${PAGE_H}mm; background: white; }
-  body { position: relative; }
+  body {
+    position: relative;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .black-band {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: ${PAGE_W}mm;
+    height: ${BLACK_BAND_H}mm;
+    background: #000;
+    z-index: 0;
+  }
   .strip {
     position: absolute;
     top: ${BAND_TOP}mm;
@@ -705,6 +720,7 @@
     height: ${BAND_H}mm;
     display: flex;
     flex-direction: column;
+    z-index: 1;
   }
   .cell {
     width: 100%;
@@ -731,6 +747,7 @@
     flex-shrink: 0;
   }
 </style></head><body>
+<div class="black-band"></div>
 <div class="strip">
 ${imgs.map((src,i)=>`<div class="cell"><img src="${src}"><div class="lbl">${labels[i]}</div></div>`).join('\n')}
 </div>
