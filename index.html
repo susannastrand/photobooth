@@ -697,17 +697,23 @@
         const OVERHEAD_PER_BOX = BORDER + LABEL_GAP + LABEL_H + BORDER;
         const totalOverhead    = N * OVERHEAD_PER_BOX + (N - 1) * BOX_GAP;
         const imageBudgetTotal = AREA_H - totalOverhead;
-        const equalShare       = imageBudgetTotal / N; // maks høyde per bilde før bredde-begrensning
 
         const MAX_IMG_W = PAGE_W - 2 * BORDER; // 68 mm, bildet kan aldri bli bredere enn dette
 
-        // Beregn faktisk bredde/høyde per bilde ut fra dets ekte sideforhold, slik at
-        // ingenting croppes: begrenset av enten høydebudsjettet eller sidebredden.
+        // Alle boksene skal ha SAMME bredde (som Robinson, helt ut til kanten).
+        // Finn den største felles bredden som gjør at summen av alle høydene
+        // fortsatt får plass i høydebudsjettet, og bruk 68 mm som tak.
+        const invAspectSum = keys.reduce((sum, k) => sum + canvases[k].height / canvases[k].width, 0);
+        const widthFromBudget = imageBudgetTotal / invAspectSum;
+        const COMMON_W = Math.min(MAX_IMG_W, widthFromBudget);
+
+        // Bredden er lik for alle; høyden følger hvert bildes ekte sideforhold,
+        // slik at ingenting croppes eller strekkes.
         const sizes = keys.map(k => {
           const c = canvases[k];
           const aspect = c.width / c.height;
-          let h = Math.min(equalShare, MAX_IMG_W / aspect);
-          let w = h * aspect;
+          const w = COMMON_W;
+          const h = w / aspect;
           return { w, h };
         });
 
