@@ -675,50 +675,64 @@
       });
 
       function printImages() {
+        // Rekkefølge ovenfra og ned: Mercator, Goode's, Robinson, Gall–Peters
         const keys   = ['mercator','goode','robinson','peters'];
         const labels = ['Mercator',"Goode's Homolosine",'Robinson','Gall–Peters'];
         const imgs   = keys.map(k => canvases[k].toDataURL('image/png'));
 
+        // Sideformat: 74 x 420 mm.
+        // Bildene stables kun innenfor båndet fra 5 mm til 235 mm fra toppen (høyde 230 mm).
+        const PAGE_W    = 74;   // mm
+        const PAGE_H    = 420;  // mm
+        const BAND_TOP  = 5;    // mm
+        const BAND_BOT  = 235;  // mm
+        const BAND_H    = BAND_BOT - BAND_TOP; // 230 mm
+        const N_IMAGES  = keys.length;
+        const CELL_H    = BAND_H / N_IMAGES;   // 57.5 mm per bilde
+
         const win = window.open('','_blank');
         win.document.write(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><style>
-  @page { size: A5 landscape; margin: 0; }
+  @page { size: ${PAGE_W}mm ${PAGE_H}mm; margin: 0; }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 210mm; height: 148mm; background: white; }
-  body { display: flex; align-items: center; justify-content: center; }
-  .grid {
-    width: calc(210mm - 12mm);
-    height: calc(148mm - 12mm);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 3mm;
+  html, body { width: ${PAGE_W}mm; height: ${PAGE_H}mm; background: white; }
+  body { position: relative; }
+  .strip {
+    position: absolute;
+    top: ${BAND_TOP}mm;
+    left: 0;
+    width: ${PAGE_W}mm;
+    height: ${BAND_H}mm;
+    display: flex;
+    flex-direction: column;
   }
   .cell {
+    width: 100%;
+    height: ${CELL_H}mm;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    gap: 1.5mm;
+    gap: 1mm;
   }
   .cell img {
-    max-width: 100%;
-    max-height: calc(100% - 6mm);
+    max-width: 94%;
+    max-height: calc(100% - 5mm);
     object-fit: contain;
     display: block;
   }
   .lbl {
     font-family: 'Courier New', monospace;
-    font-size: 5.5pt;
+    font-size: 5pt;
     color: #555;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     flex-shrink: 0;
   }
 </style></head><body>
-<div class="grid">
-${imgs.map((src,i)=>`<div class="cell"><img src="${src}"><div class="lbl">${labels[i]}</div></div>`).join('')}
+<div class="strip">
+${imgs.map((src,i)=>`<div class="cell"><img src="${src}"><div class="lbl">${labels[i]}</div></div>`).join('\n')}
 </div>
 </body></html>`);
         win.document.close();
