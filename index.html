@@ -688,7 +688,8 @@
         const BAND_BOT  = 235;  // mm
         const BAND_H    = BAND_BOT - BAND_TOP; // 230 mm
         const N_IMAGES  = keys.length;
-        const CELL_H    = BAND_H / N_IMAGES;   // 57.5 mm per bilde
+        const GAP       = 3; // mm, hvitt mellomrom mellom bildene
+        const CELL_H    = (BAND_H - GAP * (N_IMAGES - 1)) / N_IMAGES;
 
         const BLACK_BAND_H = 240; // mm, svart bakgrunn fra 0 til 240 mm
 
@@ -720,6 +721,8 @@
     height: ${BAND_H}mm;
     display: flex;
     flex-direction: column;
+    gap: ${GAP}mm;
+    background: #fff;
     z-index: 1;
   }
   .cell {
@@ -731,6 +734,7 @@
     justify-content: center;
     overflow: hidden;
     gap: 1mm;
+    background: #000;
   }
   .cell img {
     max-width: 94%;
@@ -738,10 +742,14 @@
     object-fit: contain;
     display: block;
   }
+  .cell.robinson img {
+    max-width: 88%;
+  }
   .lbl {
     font-family: 'Courier New', monospace;
     font-size: 5pt;
-    color: #555;
+    color: #fff;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     flex-shrink: 0;
@@ -749,7 +757,7 @@
 </style></head><body>
 <div class="black-band"></div>
 <div class="strip">
-${imgs.map((src,i)=>`<div class="cell"><img src="${src}"><div class="lbl">${labels[i]}</div></div>`).join('\n')}
+${imgs.map((src,i)=>`<div class="cell${keys[i]==='robinson' ? ' robinson' : ''}"><img src="${src}"><div class="lbl">${labels[i]}</div></div>`).join('\n')}
 </div>
 </body></html>`);
         win.document.close();
