@@ -684,14 +684,13 @@
         // Bildene stables kun innenfor båndet fra 5 mm til 235 mm fra toppen (høyde 230 mm).
         const PAGE_W    = 74;   // mm
         const PAGE_H    = 420;  // mm
-        const BAND_TOP  = 5;    // mm
+        const BAND_TOP  = 0;    // mm
         const BAND_BOT  = 235;  // mm
         const BAND_H    = BAND_BOT - BAND_TOP; // 230 mm
         const N_IMAGES  = keys.length;
-        const GAP       = 3; // mm, hvitt mellomrom mellom bildene
+        const GAP       = 2.5; // mm, hvitt mellomrom mellom bildene
         const CELL_H    = (BAND_H - GAP * (N_IMAGES - 1)) / N_IMAGES;
 
-        const BLACK_BAND_H = 240; // mm, svart bakgrunn fra 0 til 240 mm
 
         const win = window.open('','_blank');
         win.document.write(`<!DOCTYPE html>
@@ -703,15 +702,6 @@
     position: relative;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-  }
-  .black-band {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: ${PAGE_W}mm;
-    height: ${BLACK_BAND_H}mm;
-    background: #000;
-    z-index: 0;
   }
   .strip {
     position: absolute;
@@ -738,10 +728,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1mm;
+    gap: 2.5mm;
     background: #000;
     padding: 2.5mm;
-    max-width: 96%;
+    max-width: 100%;
     max-height: 100%;
   }
   .box img {
@@ -751,7 +741,7 @@
     display: block;
   }
   .box.robinson img {
-    max-width: 90%;
+    max-width: 95%;
   }
   .lbl {
     font-family: 'Courier New', monospace;
