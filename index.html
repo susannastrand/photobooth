@@ -56,6 +56,7 @@
         text-align: center;
         font-family: var(--font-mono);
         font-size: 0.65rem;
+        letter-spacing: 0.08em;
         color: #ffffff;
         pointer-events: none;
       }
@@ -596,7 +597,7 @@
           ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
         document.getElementById('print-btn').disabled = true;
-        if (cameraReady) statusEl.textContent = 'Ready — frame yourself';
+        if (cameraReady) statusEl.textContent = 'Ready — get close';
       }
 
       const liveCanvas = document.getElementById('live');
@@ -614,7 +615,7 @@
           if (video.readyState >= 2) {
             const w=liveCanvas.width, h=liveCanvas.height;
             liveCtx.save(); liveCtx.scale(-1,1); liveCtx.drawImage(video,-w,0,w,h); liveCtx.restore();
-            if (!cameraReady) { cameraReady=true; statusEl.textContent='Ready — frame yourself'; }
+            if (!cameraReady) { cameraReady=true; statusEl.textContent='Ready — get close'; }
           }
           rafId = requestAnimationFrame(drawLive);
         }
