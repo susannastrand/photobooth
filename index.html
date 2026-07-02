@@ -696,13 +696,13 @@
         // Sideformat: 74 x 420 mm. Bildene skal passe inn i området 0–235 mm fra toppen.
         const PAGE_W      = 74;   // mm
         const PAGE_H      = 420;  // mm
-        const AREA_TOP    = 2;    // mm
+        const AREA_TOP    = 5;    // mm
         const AREA_BOTTOM = 235;  // mm
         const AREA_H      = AREA_BOTTOM - AREA_TOP; // 235 mm
 
-        const BORDER      = 2;    // mm, svart kant rundt selve bildet (topp/side/like under bildet)
+        const BORDER      = 1;    // mm, svart kant rundt selve bildet (topp/side/like under bildet)
         const LABEL_GAP   = 2;    // mm, luft mellom bilde og label
-        const LABEL_H     = 3;  // mm, reservert høyde til 8pt label-tekst
+        const LABEL_H     = 1;  // mm, reservert høyde til 8pt label-tekst
         const BOX_GAP     = 2;    // mm, hvitt mellomrom mellom boksene
         const N           = keys.length;
 
@@ -769,9 +769,9 @@
   .lbl {
     margin-top: ${LABEL_GAP}mm;
     font-family: "acumin-pro-semi-condensed", sans-serif;
-    font-weight: 400;
+    font-weight: 300;
     font-style: normal;
-    font-size: 9,5pt;
+    font-size: 7pt;
     line-height: 1;
     color: #fff;
     text-transform: uppercase;
