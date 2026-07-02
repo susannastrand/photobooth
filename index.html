@@ -709,19 +709,10 @@
         const OVERHEAD_PER_BOX = LABEL_H + LABEL_GAP;
         const totalOverhead    = N * OVERHEAD_PER_BOX + (N - 1) * BOX_GAP;
         const imageBudgetTotal = AREA_H - totalOverhead;
-
         const MAX_IMG_W = PAGE_W; // bildet kan aldri bli bredere enn siden
 
         // Alltid bruk full sidebredde — bildene skal gå helt ut til kanten.
         const COMMON_W = MAX_IMG_W;
-
-        // Alle boksene skal ha SAMME bredde (som Robinson, helt ut til kanten).
-        // Finn den største felles bredden som gjør at summen av alle høydene
-        // fortsatt får plass i høydebudsjettet, og bruk PAGE_W som tak.
-        // (kan fjernes helt hvis du vil)
-        // const invAspectSum = keys.reduce((sum, k) => sum + canvases[k].height / canvases[k].width, 0);
-        // const widthFromBudget = imageBudgetTotal / invAspectSum;
-        const COMMON_W = Math.min(MAX_IMG_W, widthFromBudget);
 
         // Bredden er lik for alle; høyden følger hvert bildes ekte sideforhold,
         // slik at ingenting croppes eller strekkes.
@@ -732,7 +723,7 @@
           const h = w / aspect;
           return { w, h };
         });
-
+        
         const win = window.open('','_blank');
         win.document.write(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
