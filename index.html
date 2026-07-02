@@ -324,7 +324,7 @@
       function toPixel(x, y, projKey) {
         const box = BBOX[projKey];
         const dim = DIMS[projKey];
-        const margin = 0.96;
+        const margin = 0.90;
         const px = (x - box.minX) / box.w * dim.w * margin + dim.w * (1 - margin) / 2;
         const py = (box.maxY - y) / box.h * dim.h * margin + dim.h * (1 - margin) / 2;
         return [px, py];
@@ -514,7 +514,7 @@
         const dst = dstCtx.createImageData(dim.w, dim.h);
         const sd  = src.data, dd = dst.data;
 
-        const margin = 0.96;
+        const margin = 0.90;
         const offX   = dim.w * (1 - margin) / 2;
         const offY   = dim.h * (1 - margin) / 2;
         const projW  = dim.w * margin;
