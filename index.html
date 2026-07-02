@@ -700,9 +700,9 @@
         const AREA_BOTTOM = 235;  // mm
         const AREA_H      = AREA_BOTTOM - AREA_TOP; // 235 mm
 
-        const LABEL_GAP   = 1;    // mm, luft mellom label og bilde
+        const LABEL_GAP   = 1.5;  // mm, tett opptil bildet sitt eget label
         const LABEL_H     = 4;    // mm, reservert høyde til 8pt label-tekst
-        const BOX_GAP     = 4;    // mm, hvitt mellomrom mellom boksene
+        const BOX_GAP     = 7;    // mm, tydelig luft mellom hvert bilde+label-par
         const N           = keys.length;
 
         // Hver boks: LABEL_H (label) + LABEL_GAP + bilde
@@ -754,8 +754,8 @@
     justify-content: flex-start;
     gap: ${BOX_GAP}mm;
   }
-  .lbl {
-    margin-top: ${LABEL_H}mm;
+.lbl {
+    margin-top: ${LABEL_GAP}mm;   /* liten avstand NED til labelen, ikke opp */
     font-family: "acumin-pro-semi-condensed", sans-serif;
     font-weight: 300;
     font-style: normal;
@@ -765,7 +765,7 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     white-space: nowrap;
-  }
+}
   .box {
     display: inline-flex;
     flex-direction: column;
@@ -778,7 +778,7 @@
 </style>
 </head><body>
 <div class="strip">
-${sizes.map((s,i)=>`<div class="box"><div class="lbl">${labels[i]}</div><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"></div>`).join('\n')}
+${sizes.map((s,i)=>`<div class="box"><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"><div class="lbl">${labels[i]}</div></div>`).join('\n')}
 </div>
 </body></html>`);
         win.document.close();
