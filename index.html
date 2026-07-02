@@ -4,14 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Map Projection Photobooth</title>
+    <link rel="stylesheet" href="https://use.typekit.net/dud7oyv.css">
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&display=swap');
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       :root {
         --bg: #000000; --surface: #1a1a1a; --border: #2e2e2e;
         --text: #e8e8e0; --muted: #666; --accent: #FFFFFF; --radius: 6px;
         --font-sans: 'Space Grotesk', system-ui, sans-serif;
-        --font-mono: 'Space Mono', monospace;
+        --font-mono: 'acumin-pro', sans-serif;
       }
 
       body {
@@ -74,7 +75,7 @@
         border-radius: var(--radius);
         font-family: var(--font-mono);
         font-size: 0.85rem;
-        font-weight: 700;
+        font-weight: 400;
         letter-spacing: 0.06em;
         cursor: pointer;
         text-transform: uppercase;
@@ -595,7 +596,7 @@
           ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
         document.getElementById('print-btn').disabled = true;
-        if (cameraReady) statusEl.textContent = 'Ready — get close to the camera';
+        if (cameraReady) statusEl.textContent = 'Ready — frame yourself';
       }
 
       const liveCanvas = document.getElementById('live');
@@ -613,7 +614,7 @@
           if (video.readyState >= 2) {
             const w=liveCanvas.width, h=liveCanvas.height;
             liveCtx.save(); liveCtx.scale(-1,1); liveCtx.drawImage(video,-w,0,w,h); liveCtx.restore();
-            if (!cameraReady) { cameraReady=true; statusEl.textContent='Ready — get close to the camera'; }
+            if (!cameraReady) { cameraReady=true; statusEl.textContent='Ready — frame yourself'; }
           }
           rafId = requestAnimationFrame(drawLive);
         }
@@ -731,8 +732,8 @@
         const win = window.open('','_blank');
         win.document.write(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
+<link rel="stylesheet" href="https://use.typekit.net/dud7oyv.css">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&display=swap');
   @page { size: ${PAGE_W}mm ${PAGE_H}mm; margin: 0; }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: ${PAGE_W}mm; height: ${PAGE_H}mm; background: #fff; }
@@ -766,8 +767,8 @@
   }
   .lbl {
     margin-top: ${LABEL_GAP}mm;
-    font-family: 'Acumin Pro Condensed', sans-serif;
-    font-weight: 700;
+    font-family: 'acumin-pro', sans-serif;
+    font-weight: 400;
     font-size: 8pt;
     line-height: 1;
     color: #fff;
