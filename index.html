@@ -688,9 +688,9 @@
       });
 
       function printImages() {
-        // Rekkefølge ovenfra og ned: Mercator, Goode's, Gall–Peters, Robinson
-        const keys   = ['mercator','goode','peters','robinson'];
-        const labels = ['Mercator',"Goode's Homolosine",'Gall–Peters','Robinson'];
+        // Rekkefølge ovenfra og ned: Mercator, Goode's, Robinson, Gall–Peters
+        const keys   = ['mercator','goode','robinson','peters'];
+        const labels = ['Mercator',"Goode's Homolosine",'Robinson','Gall–Peters'];
         const imgs   = keys.map(k => canvases[k].toDataURL('image/png'));
 
         // Sideformat: 74 x 420 mm. Bildene skal passe inn i området 0–235 mm fra toppen.
@@ -700,22 +700,21 @@
         const AREA_BOTTOM = 235;  // mm
         const AREA_H      = AREA_BOTTOM - AREA_TOP; // 235 mm
 
-        const BORDER      = 1;    // mm, svart kant rundt selve bildet (topp/side/like under bildet)
-        const LABEL_GAP   = 1;    // mm, luft mellom bilde og label
-        const LABEL_H     = 1;  // mm, reservert høyde til 8pt label-tekst
-        const BOX_GAP     = 1;    // mm, hvitt mellomrom mellom boksene
+        const LABEL_GAP   = 1;    // mm, luft mellom label og bilde
+        const LABEL_H     = 4;    // mm, reservert høyde til 8pt label-tekst
+        const BOX_GAP     = 4;    // mm, hvitt mellomrom mellom boksene
         const N           = keys.length;
 
-        // Hver boks: BORDER (topp) + bilde + LABEL_GAP + LABEL_H + BORDER (bunn, ekstra plass til label)
-        const OVERHEAD_PER_BOX = BORDER + LABEL_GAP + LABEL_H + BORDER;
+        // Hver boks: LABEL_H (label) + LABEL_GAP + bilde
+        const OVERHEAD_PER_BOX = LABEL_H + LABEL_GAP;
         const totalOverhead    = N * OVERHEAD_PER_BOX + (N - 1) * BOX_GAP;
         const imageBudgetTotal = AREA_H - totalOverhead;
 
-        const MAX_IMG_W = PAGE_W - 1 * BORDER; // 68 mm, bildet kan aldri bli bredere enn dette
+        const MAX_IMG_W = PAGE_W; // bildet kan aldri bli bredere enn siden
 
         // Alle boksene skal ha SAMME bredde (som Robinson, helt ut til kanten).
         // Finn den største felles bredden som gjør at summen av alle høydene
-        // fortsatt får plass i høydebudsjettet, og bruk 68 mm som tak.
+        // fortsatt får plass i høydebudsjettet, og bruk PAGE_W som tak.
         const invAspectSum = keys.reduce((sum, k) => sum + canvases[k].height / canvases[k].width, 0);
         const widthFromBudget = imageBudgetTotal / invAspectSum;
         const COMMON_W = Math.min(MAX_IMG_W, widthFromBudget);
@@ -756,7 +755,7 @@
     gap: ${BOX_GAP}mm;
   }
   .lbl {
-    margin-top: ${LABEL_GAP}mm;
+    margin-bottom: ${LABEL_GAP}mm;
     font-family: "acumin-pro-semi-condensed", sans-serif;
     font-weight: 300;
     font-style: normal;
@@ -768,21 +767,18 @@
     white-space: nowrap;
   }
   .box {
-    display hidden;
-    background: #000;
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    padding: ${BORDER}mm;
   }
   .box img {
-    display: hidden;
+    display: block;
     object-fit: contain;
   }
 </style>
 </head><body>
 <div class="strip">
-${sizes.map((s,i)=>`<div class="box"><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"><div class="lbl">${labels[i]}</div></div>`).join('\n')}
+${sizes.map((s,i)=>`<div class="box"><div class="lbl">${labels[i]}</div><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"></div>`).join('\n')}
 </div>
 </body></html>`);
         win.document.close();
