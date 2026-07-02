@@ -9,7 +9,7 @@
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       :root {
         --bg: #000000; --surface: #1a1a1a; --border: #2e2e2e;
-        --text: #e8e8e0; --muted: #666; --accent: #3399FF; --radius: 6px;
+        --text: #e8e8e0; --muted: #666; --accent: #FFFFFF; --radius: 6px;
         --font-sans: 'Space Grotesk', system-ui, sans-serif;
         --font-mono: 'Space Mono', monospace;
       }
@@ -595,7 +595,7 @@
           ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
         document.getElementById('print-btn').disabled = true;
-        if (cameraReady) statusEl.textContent = 'Ready — frame yourself';
+        if (cameraReady) statusEl.textContent = 'Ready — get close to the camera';
       }
 
       const liveCanvas = document.getElementById('live');
@@ -613,7 +613,7 @@
           if (video.readyState >= 2) {
             const w=liveCanvas.width, h=liveCanvas.height;
             liveCtx.save(); liveCtx.scale(-1,1); liveCtx.drawImage(video,-w,0,w,h); liveCtx.restore();
-            if (!cameraReady) { cameraReady=true; statusEl.textContent='Ready — frame yourself'; }
+            if (!cameraReady) { cameraReady=true; statusEl.textContent='Ready — get close to the camera'; }
           }
           rafId = requestAnimationFrame(drawLive);
         }
