@@ -705,10 +705,6 @@
         const BOX_GAP     = 3;    // mm, tydelig luft mellom hvert bilde+label-par
         const N           = keys.length;
 
-
-
-
-        
         // Hver boks: LABEL_H (label) + LABEL_GAP + bilde
         const OVERHEAD_PER_BOX = LABEL_H + LABEL_GAP;
         const totalOverhead    = N * OVERHEAD_PER_BOX + (N - 1) * BOX_GAP;
@@ -726,11 +722,6 @@
           const w = COMMON_W;
           const h = w / aspect;
           return { w, h };
-          const totalHeight = sizes.reduce((sum, s) => sum + s.h, 0)
-  + (sizes.length - 1) * BOX_GAP
-  + sizes.length * (LABEL_H + LABEL_GAP);
-
-const scale = totalHeight > AREA_H ? AREA_H / totalHeight : 1;
         });
         
         const win = window.open('','_blank');
@@ -753,6 +744,7 @@ const scale = totalHeight > AREA_H ? AREA_H / totalHeight : 1;
     width: ${PAGE_W}mm;
     height: ${AREA_H}mm;
     max-height: 240mm;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -786,12 +778,7 @@ const scale = totalHeight > AREA_H ? AREA_H / totalHeight : 1;
 </style>
 </head><body>
 <div class="strip">
-${sizes.map((s,i)=>`
-  <div class="box" style="transform: scale(${scale}); transform-origin: top center;">
-    <img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;">
-    <div class="lbl">${labels[i]}</div>
-  </div>
-`).join('\n')}
+${sizes.map((s,i)=>`<div class="box"><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"><div class="lbl">${labels[i]}</div></div>`).join('\n')}
 </div>
 </body></html>`);
         win.document.close();
