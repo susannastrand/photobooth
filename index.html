@@ -587,6 +587,17 @@
         document.getElementById('print-btn').disabled = false;
       }
 
+      function resetBooth() {
+        // Tøm de fire projeksjonsbildene og gå tilbake til startposisjon.
+        // Kameraet (video-strømmen og live-loopen) røres ikke og fortsetter å kjøre.
+        for (const canvas of Object.values(canvases)) {
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        document.getElementById('print-btn').disabled = true;
+        if (cameraReady) statusEl.textContent = 'Ready — frame yourself';
+      }
+
       const liveCanvas = document.getElementById('live');
       const liveCtx    = liveCanvas.getContext('2d');
       const statusEl   = document.getElementById('status');
@@ -771,7 +782,14 @@ ${sizes.map((s,i)=>`<div class="box"><img src="${imgs[i]}" style="width:${s.w.to
 </div>
 </body></html>`);
         win.document.close();
-        win.onload = () => { win.focus(); win.print(); win.close(); };
+        win.onload = () => {
+          win.focus();
+          win.print();
+          win.close();
+          // window.print() blokkerer til print-dialogen er lukket i de aller
+          // fleste nettlesere, så dette kjører rett etter man har printet/avbrutt.
+          resetBooth();
+        };
       }
 
       document.getElementById('print-btn').addEventListener('click', printImages);
