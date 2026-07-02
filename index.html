@@ -697,7 +697,7 @@
         const PAGE_W      = 74;   // mm
         const PAGE_H      = 420;  // mm
         const AREA_TOP    = 0;    // mm
-        const AREA_BOTTOM = 230;  // mm
+        const AREA_BOTTOM = 240;  // mm
         const AREA_H      = AREA_BOTTOM - AREA_TOP; // 235 mm
 
         const LABEL_GAP   = 1.5;  // mm, tett opptil bildet sitt eget label
@@ -743,6 +743,8 @@
     left: 0;
     width: ${PAGE_W}mm;
     height: ${AREA_H}mm;
+    max-height: 240mm;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
