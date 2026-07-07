@@ -716,18 +716,6 @@ const imageBudgetTotal = AVAILABLE_H - totalOverhead;
 
         const MAX_IMG_W = PAGE_W; // bildet kan aldri bli bredere enn siden
 
-        const totalHeight =
-    sizes.reduce((sum, s) => sum + s.h, 0) +
-    totalOverhead;
-
-if (totalHeight > AVAILABLE_H) {
-    const scale = AVAILABLE_H / totalHeight;
-
-    sizes.forEach(s => {
-        s.w *= scale;
-        s.h *= scale;
-    });
-}
 
         // Alle boksene skal ha SAMME bredde (som Robinson, helt ut til kanten).
         // Finn den største felles bredden som gjør at summen av alle høydene
@@ -746,6 +734,18 @@ if (totalHeight > AVAILABLE_H) {
           return { w, h };
         });
 
+        const totalHeight =
+    sizes.reduce((sum, s) => sum + s.h, 0) +
+    totalOverhead;
+
+if (totalHeight > AVAILABLE_H) {
+    const scale = AVAILABLE_H / totalHeight;
+
+    sizes.forEach(s => {
+        s.w *= scale;
+        s.h *= scale;
+    });
+}
         const win = window.open('','_blank');
         win.document.write(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
