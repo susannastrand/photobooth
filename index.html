@@ -584,6 +584,18 @@
           ctx.lineWidth=1.5;
           ctx.stroke(outline);
           ctx.restore();
+
+          // Beskjær selve canvaset til det som faktisk er tegnet (kartets
+          // omriss/linjer), slik at det er kartets ekte grenser — ikke det
+          // opprinnelige, fast formede lerretet med tom kant rundt — som
+          // bestemmer hvor stort bildet vises. Gjelder både her på skjermen
+          // og videre i print.
+          const trimmed = cropCanvasToContent(canvas);
+          if (trimmed !== canvas) {
+            canvas.width  = trimmed.width;
+            canvas.height = trimmed.height;
+            canvas.getContext('2d').drawImage(trimmed, 0, 0);
+          }
         }
 
         document.getElementById('print-btn').disabled = false;
