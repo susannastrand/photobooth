@@ -701,19 +701,16 @@ const AREA_TOP    = 5;      // mm
 const AREA_BOTTOM = 240;    // mm
 const AREA_H      = AREA_BOTTOM - AREA_TOP;
 
-const LABEL_GAP   = 1;
-const LABEL_H     = 4;
-const BOX_GAP     = 4;
-const N           = keys.length;
-
-// Litt sikkerhetsmargin slik at ingenting blir kuttet av printeren
-const SAFE_MARGIN = 3; // mm
-
+const LABEL_GAP = 1;
+const LABEL_H   = 4;
+const BOX_GAP   = 4;
+const N         = keys.length;
+const SAFE_MARGIN = 3;
 const AVAILABLE_H = AREA_H - SAFE_MARGIN;
-
-const OVERHEAD_PER_BOX = LABEL_H + LABEL_GAP;
-const totalOverhead    = N * OVERHEAD_PER_BOX + (N - 1) * BOX_GAP;
-const imageBudgetTotal = AVAILABLE_H - totalOverhead;
+const totalFixedHeight =
+  N * (LABEL_H + LABEL_GAP) +
+  (N - 1) * BOX_GAP;
+const imageBudgetTotal = AVAILABLE_H - totalFixedHeight;
 
         const MAX_IMG_W = PAGE_W; // bildet kan aldri bli bredere enn siden
 
@@ -735,17 +732,16 @@ const imageBudgetTotal = AVAILABLE_H - totalOverhead;
           return { w, h };
         });
 
-        const totalHeight =
-    sizes.reduce((sum, s) => sum + s.h, 0) +
-    totalOverhead;
-
+const imageHeight = sizes.reduce((sum, s) => sum + s.h, 0);
+const totalHeight =
+  imageHeight + totalFixedHeight;
 if (totalHeight > AVAILABLE_H) {
-    const scale = AVAILABLE_H / totalHeight;
-
-    sizes.forEach(s => {
-        s.w *= scale;
-        s.h *= scale;
-    });
+  const scale =
+    (AVAILABLE_H - totalFixedHeight) / imageHeight;
+  sizes.forEach(s => {
+    s.w *= scale;
+    s.h *= scale;
+  });
 }
         const win = window.open('','_blank');
         win.document.write(`<!DOCTYPE html>
@@ -773,7 +769,7 @@ if (totalHeight > AVAILABLE_H) {
     gap: ${BOX_GAP}mm;
   }
   .lbl {
-    margin-bottom: ${LABEL_GAP}mm;
+    margin-top: ${LABEL_GAP}mm;
     font-family: "acumin-pro-semi-condensed", sans-serif;
     font-weight: 300;
     font-style: normal;
@@ -796,7 +792,7 @@ if (totalHeight > AVAILABLE_H) {
 </style>
 </head><body>
 <div class="strip">
-${sizes.map((s,i)=>`<div class="box"><div class="lbl">${labels[i]}</div><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"></div>`).join('\n')}
+${sizes.map((s,i)=>`<div class="box"><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"><div class="lbl">${labels[i]}</div></div>`).join('\n')}}
 </div>
 </body></html>`);
         win.document.close();
