@@ -90,21 +90,9 @@
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-auto-rows: 320px;   /* alle ruter samme høyde */
+  grid-auto-rows: auto;   /* hver rute følger sitt eget karts sideforhold */
   gap: 12px;
-}
-.proj-cell {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.proj-cell canvas {
-  max-width: 100%;
-  max-height: calc(100% - 20px);
-  width: auto;
-  height: auto;
+  align-items: end;       /* labels på samme linje selv om kartene er ulikt høye */
 }
       .proj-cell {
         background: radial-gradient(circle at 50% 50%, #161616, #000000);
