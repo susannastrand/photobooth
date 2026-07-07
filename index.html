@@ -687,20 +687,64 @@
         } catch(e) {}
       });
 
+      // Finner pikselgrensene til alt som faktisk er tegnet (ikke-transparente
+      // piksler) i et canvas — altså omrisset/linjene, ikke hele det ledige
+      // rektangelet rundt.
+      function getTightBBox(canvas) {
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        const data = ctx.getImageData(0, 0, w, h).data;
+        let minX = w, minY = h, maxX = -1, maxY = -1;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const alpha = data[(y * w + x) * 4 + 3];
+            if (alpha > 10) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+        if (maxX < minX || maxY < minY) return null;
+        return { minX, minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+      }
+
+      // Beskjærer et canvas til det faktiske innholdet (kartets omriss/linjer),
+      // slik at eventuell tom kant rundt kartet forsvinner. Det er dermed
+      // linjene — ikke det opprinnelige lerretets faste sideforhold — som
+      // bestemmer bildets høyde og bredde videre.
+      function cropCanvasToContent(canvas) {
+        const bbox = getTightBBox(canvas);
+        if (!bbox) return canvas;
+        const out = document.createElement('canvas');
+        out.width = bbox.w;
+        out.height = bbox.h;
+        out.getContext('2d').drawImage(
+          canvas, bbox.minX, bbox.minY, bbox.w, bbox.h, 0, 0, bbox.w, bbox.h
+        );
+        return out;
+      }
+
       function printImages() {
         // Rekkefølge ovenfra og ned: Mercator, Goode's, Robinson, Gall–Peters
         const keys   = ['mercator','goode','robinson','peters'];
         const labels = ['Mercator',"Goode's Homolosine",'Robinson','Gall–Peters'];
-        const imgs   = keys.map(k => canvases[k].toDataURL('image/png'));
 
-        // Sideformat: 74 x 420 mm. Bildene skal passe inn i området 0–235 mm fra toppen.
+        // Beskjær hvert kart til det faktiske innholdet (linjene/omrisset) før
+        // det brukes videre, slik at eventuell tom kant rundt kartet ikke
+        // teller med verken i høyden eller i avstanden ned til labelen.
+        const croppedCanvases = keys.map(k => cropCanvasToContent(canvases[k]));
+        const imgs = croppedCanvases.map(c => c.toDataURL('image/png'));
+
+        // Sideformat: 74 x 420 mm. Bildene skal passe inn i området 0–240 mm fra toppen.
         const PAGE_W      = 74;   // mm
         const PAGE_H      = 420;  // mm
         const AREA_TOP    = 0;    // mm
         const AREA_BOTTOM = 240;  // mm
-        const AREA_H      = AREA_BOTTOM - AREA_TOP; // 235 mm
+        const AREA_H      = AREA_BOTTOM - AREA_TOP; // 240 mm
 
-        const LABEL_GAP   = 1.5;  // mm, tett opptil bildet sitt eget label
+        const LABEL_GAP   = 1.5;  // mm, tett opptil bildet sitt eget label — samme avstand for alle
         const LABEL_H     = 3;    // mm, reservert høyde til 8pt label-tekst
         const BOX_GAP     = 3;    // mm, tydelig luft mellom hvert bilde+label-par
         const N           = keys.length;
@@ -711,19 +755,26 @@
         const imageBudgetTotal = AREA_H - totalOverhead;
         const MAX_IMG_W = PAGE_W; // bildet kan aldri bli bredere enn siden
 
-        // Alltid bruk full sidebredde — bildene skal gå helt ut til kanten.
-        const COMMON_W = MAX_IMG_W;
-
-        // Bredden er lik for alle; høyden følger hvert bildes ekte sideforhold,
-        // slik at ingenting croppes eller strekkes.
-        const sizes = keys.map(k => {
-          const c = canvases[k];
+        // Naturlig størrelse ved full sidebredde, basert på det beskårne
+        // bildets ekte sideforhold — nå er det linjene/omrisset som avgjør
+        // høyden, ikke det opprinnelige lerretets faste rektangel.
+        let sizes = croppedCanvases.map(c => {
           const aspect = c.width / c.height;
-          const w = COMMON_W;
+          const w = MAX_IMG_W;
           const h = w / aspect;
           return { w, h };
         });
-        
+
+        // Hvis summen av bildehøydene ikke får plass innenfor de 240 mm sammen
+        // med labels og luft mellom boksene, skaleres alle boksene ned likt
+        // (bredde og høyde sammen) til alt akkurat får plass. All tekst
+        // (labelene) er alltid med, uansett.
+        const naturalTotalH = sizes.reduce((sum, s) => sum + s.h, 0);
+        if (naturalTotalH > imageBudgetTotal) {
+          const scale = imageBudgetTotal / naturalTotalH;
+          sizes = sizes.map(s => ({ w: s.w * scale, h: s.h * scale }));
+        }
+
         const win = window.open('','_blank');
         win.document.write(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
