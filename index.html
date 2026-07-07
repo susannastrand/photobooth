@@ -792,7 +792,7 @@ if (totalHeight > AVAILABLE_H) {
 </style>
 </head><body>
 <div class="strip">
-${sizes.map((s,i)=>`<div class="box"><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"><div class="lbl">${labels[i]}</div></div>`).join('\n')}}
+${sizes.map((s,i)=>`<div class="box"><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"><div class="lbl">${labels[i]}</div></div>`).join('\n')}
 </div>
 </body></html>`);
         win.document.close();
