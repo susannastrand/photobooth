@@ -55,7 +55,7 @@
         right: 0;
         text-align: center;
         font-family: var(--font-mono);
-        font-size: 1.65rem;
+        font-size: 0.65rem;
         letter-spacing: 0.06em;
         color: #ffffff;
         pointer-events: none;
@@ -90,9 +90,21 @@
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-auto-rows: auto;   /* hver rute følger sitt eget karts sideforhold */
+  grid-auto-rows: 320px;   /* alle ruter samme høyde */
   gap: 12px;
-  align-items: end;       /* labels på samme linje selv om kartene er ulikt høye */
+}
+.proj-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.proj-cell canvas {
+  max-width: 100%;
+  max-height: calc(100% - 20px);
+  width: auto;
+  height: auto;
 }
       .proj-cell {
         background: radial-gradient(circle at 50% 50%, #161616, #000000);
@@ -312,7 +324,7 @@
       function toPixel(x, y, projKey) {
         const box = BBOX[projKey];
         const dim = DIMS[projKey];
-        const margin = 0.90;
+        const margin = 0.985;
         const px = (x - box.minX) / box.w * dim.w * margin + dim.w * (1 - margin) / 2;
         const py = (box.maxY - y) / box.h * dim.h * margin + dim.h * (1 - margin) / 2;
         return [px, py];
@@ -502,14 +514,14 @@
         const dst = dstCtx.createImageData(dim.w, dim.h);
         const sd  = src.data, dd = dst.data;
 
-        const margin = 0.90;
+        const margin = 0.985;
         const offX   = dim.w * (1 - margin) / 2;
         const offY   = dim.h * (1 - margin) / 2;
         const projW  = dim.w * margin;
         const projH  = dim.h * margin;
 
-        const tolX = box.w / projW * 8;
-        const tolY = box.h / projH * 8;
+        const tolX = box.w / projW * 1.5;
+        const tolY = box.h / projH * 1.5;
 
         for (let py = 0; py < dim.h; py++) {
           for (let px = 0; px < dim.w; px++) {
@@ -572,18 +584,6 @@
           ctx.lineWidth=1.5;
           ctx.stroke(outline);
           ctx.restore();
-
-          // Beskjær selve canvaset til det som faktisk er tegnet (kartets
-          // omriss/linjer), slik at det er kartets ekte grenser — ikke det
-          // opprinnelige, fast formede lerretet med tom kant rundt — som
-          // bestemmer hvor stort bildet vises. Gjelder både her på skjermen
-          // og videre i print.
-          const trimmed = cropCanvasToContent(canvas);
-          if (trimmed !== canvas) {
-            canvas.width  = trimmed.width;
-            canvas.height = trimmed.height;
-            canvas.getContext('2d').drawImage(trimmed, 0, 0);
-          }
         }
 
         document.getElementById('print-btn').disabled = false;
@@ -687,93 +687,51 @@
         } catch(e) {}
       });
 
-      // Finner pikselgrensene til alt som faktisk er tegnet (ikke-transparente
-      // piksler) i et canvas — altså omrisset/linjene, ikke hele det ledige
-      // rektangelet rundt.
-      function getTightBBox(canvas) {
-        const ctx = canvas.getContext('2d');
-        const w = canvas.width, h = canvas.height;
-        const data = ctx.getImageData(0, 0, w, h).data;
-        let minX = w, minY = h, maxX = -1, maxY = -1;
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const alpha = data[(y * w + x) * 4 + 3];
-            if (alpha > 10) {
-              if (x < minX) minX = x;
-              if (x > maxX) maxX = x;
-              if (y < minY) minY = y;
-              if (y > maxY) maxY = y;
-            }
-          }
-        }
-        if (maxX < minX || maxY < minY) return null;
-        return { minX, minY, w: maxX - minX + 1, h: maxY - minY + 1 };
-      }
-
-      // Beskjærer et canvas til det faktiske innholdet (kartets omriss/linjer),
-      // slik at eventuell tom kant rundt kartet forsvinner. Det er dermed
-      // linjene — ikke det opprinnelige lerretets faste sideforhold — som
-      // bestemmer bildets høyde og bredde videre.
-      function cropCanvasToContent(canvas) {
-        const bbox = getTightBBox(canvas);
-        if (!bbox) return canvas;
-        const out = document.createElement('canvas');
-        out.width = bbox.w;
-        out.height = bbox.h;
-        out.getContext('2d').drawImage(
-          canvas, bbox.minX, bbox.minY, bbox.w, bbox.h, 0, 0, bbox.w, bbox.h
-        );
-        return out;
-      }
-
       function printImages() {
         // Rekkefølge ovenfra og ned: Mercator, Goode's, Robinson, Gall–Peters
         const keys   = ['mercator','goode','robinson','peters'];
         const labels = ['Mercator',"Goode's Homolosine",'Robinson','Gall–Peters'];
+        const imgs   = keys.map(k => canvases[k].toDataURL('image/png'));
 
-        // Beskjær hvert kart til det faktiske innholdet (linjene/omrisset) før
-        // det brukes videre, slik at eventuell tom kant rundt kartet ikke
-        // teller med verken i høyden eller i avstanden ned til labelen.
-        const croppedCanvases = keys.map(k => cropCanvasToContent(canvases[k]));
-        const imgs = croppedCanvases.map(c => c.toDataURL('image/png'));
-
-        // Sideformat: 74 x 420 mm. Bildene skal passe inn i området 0–240 mm fra toppen.
+        // Sideformat: 74 x 420 mm. Bildene skal passe inn i området 0–235 mm fra toppen.
         const PAGE_W      = 74;   // mm
         const PAGE_H      = 420;  // mm
-        const AREA_TOP    = 0;    // mm
-        const AREA_BOTTOM = 240;  // mm
-        const AREA_H      = AREA_BOTTOM - AREA_TOP; // 240 mm
+const AREA_TOP    = 5;      // mm
+const AREA_BOTTOM = 240;    // mm
+const AREA_H      = AREA_BOTTOM - AREA_TOP;
 
-        const LABEL_GAP   = 1.5;  // mm, tett opptil bildet sitt eget label — samme avstand for alle
-        const LABEL_H     = 3;    // mm, reservert høyde til 8pt label-tekst
-        const BOX_GAP     = 3;    // mm, tydelig luft mellom hvert bilde+label-par
-        const N           = keys.length;
+const LABEL_GAP   = 1;
+const LABEL_H     = 4;
+const BOX_GAP     = 4;
+const N           = keys.length;
 
-        // Hver boks: LABEL_H (label) + LABEL_GAP + bilde
-        const OVERHEAD_PER_BOX = LABEL_H + LABEL_GAP;
-        const totalOverhead    = N * OVERHEAD_PER_BOX + (N - 1) * BOX_GAP;
-        const imageBudgetTotal = AREA_H - totalOverhead;
+// Litt sikkerhetsmargin slik at ingenting blir kuttet av printeren
+const SAFE_MARGIN = 3; // mm
+
+const AVAILABLE_H = AREA_H - SAFE_MARGIN;
+
+const OVERHEAD_PER_BOX = LABEL_H + LABEL_GAP;
+const totalOverhead    = N * OVERHEAD_PER_BOX + (N - 1) * BOX_GAP;
+const imageBudgetTotal = AVAILABLE_H - totalOverhead;
+
         const MAX_IMG_W = PAGE_W; // bildet kan aldri bli bredere enn siden
 
-        // Naturlig størrelse ved full sidebredde, basert på det beskårne
-        // bildets ekte sideforhold — nå er det linjene/omrisset som avgjør
-        // høyden, ikke det opprinnelige lerretets faste rektangel.
-        let sizes = croppedCanvases.map(c => {
+        // Alle boksene skal ha SAMME bredde (som Robinson, helt ut til kanten).
+        // Finn den største felles bredden som gjør at summen av alle høydene
+        // fortsatt får plass i høydebudsjettet, og bruk PAGE_W som tak.
+        const invAspectSum = keys.reduce((sum, k) => sum + canvases[k].height / canvases[k].width, 0);
+        const widthFromBudget = imageBudgetTotal / invAspectSum;
+        const COMMON_W = Math.min(MAX_IMG_W, widthFromBudget);
+
+        // Bredden er lik for alle; høyden følger hvert bildes ekte sideforhold,
+        // slik at ingenting croppes eller strekkes.
+        const sizes = keys.map(k => {
+          const c = canvases[k];
           const aspect = c.width / c.height;
-          const w = MAX_IMG_W;
+          const w = COMMON_W;
           const h = w / aspect;
           return { w, h };
         });
-
-        // Hvis summen av bildehøydene ikke får plass innenfor de 240 mm sammen
-        // med labels og luft mellom boksene, skaleres alle boksene ned likt
-        // (bredde og høyde sammen) til alt akkurat får plass. All tekst
-        // (labelene) er alltid med, uansett.
-        const naturalTotalH = sizes.reduce((sum, s) => sum + s.h, 0);
-        if (naturalTotalH > imageBudgetTotal) {
-          const scale = imageBudgetTotal / naturalTotalH;
-          sizes = sizes.map(s => ({ w: s.w * scale, h: s.h * scale }));
-        }
 
         const win = window.open('','_blank');
         win.document.write(`<!DOCTYPE html>
@@ -794,15 +752,14 @@
     left: 0;
     width: ${PAGE_W}mm;
     height: ${AREA_H}mm;
-    max-height: 240mm;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
     gap: ${BOX_GAP}mm;
   }
-.lbl {
-    margin-top: ${LABEL_GAP}mm;   /* liten avstand NED til labelen, ikke opp */
+  .lbl {
+    margin-bottom: ${LABEL_GAP}mm;
     font-family: "acumin-pro-semi-condensed", sans-serif;
     font-weight: 300;
     font-style: normal;
@@ -812,23 +769,20 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     white-space: nowrap;
-}
-.box {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0mm;
-}
+  }
+  .box {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+  }
   .box img {
     display: block;
-    object-fit: cover;
-    object-position: center;
-}
+    object-fit: contain;
   }
 </style>
 </head><body>
 <div class="strip">
-${sizes.map((s,i)=>`<div class="box"><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"><div class="lbl">${labels[i]}</div></div>`).join('\n')}
+${sizes.map((s,i)=>`<div class="box"><div class="lbl">${labels[i]}</div><img src="${imgs[i]}" style="width:${s.w.toFixed(2)}mm;height:${s.h.toFixed(2)}mm;"></div>`).join('\n')}
 </div>
 </body></html>`);
         win.document.close();
