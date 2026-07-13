@@ -86,6 +86,43 @@
       #snap-btn:hover { opacity: 0.85; }
       #snap-btn:disabled { opacity: 0.3; cursor: default; }
 
+      .instructions-box {
+        width: min(95vw, 900px);
+        color: #ffffff;
+        font-family: var(--font-mono);
+      }
+
+      .instructions-box ol {
+        list-style: none;
+        counter-reset: step;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .instructions-box li {
+        counter-increment: step;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        letter-spacing: 0.01em;
+        color: #ffffff;
+      }
+
+      .instructions-box li::before {
+        content: counter(step) ") ";
+        color: #ffffff;
+      }
+
+      .instructions-box .note {
+        margin-top: 12px;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        letter-spacing: 0.01em;
+        color: #ffffff;
+      }
+
       .proj-grid {
   width: 100%;
   display: grid;
@@ -168,7 +205,19 @@
           <button id="print-btn" disabled>Print for more information</button>
         </div>
       </div>
-      
+
+      <div class="instructions-box">
+        <ol>
+          <li>Frame yourself.</li>
+          <li>Press "Take Photo". The photo will be taken and put into the four projections.</li>
+          <li>Press "Print" — a dialog box will appear, press the blue button.</li>
+          <li>Pick up your photos. Feel free to take them with you, or hang it on the wall. </li>
+        </ol>
+        <div class="note">
+          <strong>Note:</strong> As soon as the photo is taken, you must print it to keep it. If you take a new one, the previous one will disappear.
+        </div>
+      </div>
+
       <div class="proj-grid">
         
         <div class="proj-cell">
